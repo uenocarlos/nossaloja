@@ -279,14 +279,14 @@ const DEF = {
      Adicione ou remova objetos { id, name, hex } livremente.
   ══════════════════════════════════════════════════════ */
   colors: [
-    { id: 'c1', name: 'Preto',    hex: '#1a1a1a' },
+    //{ id: 'c1', name: 'Preto',    hex: '#1a1a1a' },
     { id: 'c2', name: 'Branco',   hex: '#f5f0e8' },
     { id: 'c3', name: 'Vermelho', hex: '#c0392b' },
     { id: 'c4', name: 'Azul',     hex: '#2980b9' },
-    { id: 'c5', name: 'Verde',    hex: '#27ae60' },
+    //{ id: 'c5', name: 'Verde',    hex: '#27ae60' },
     { id: 'c6', name: 'Amarelo',  hex: '#f1c40f' },
-    { id: 'c7', name: 'Laranja',  hex: '#e67e22' },
-    { id: 'c8', name: 'Rosa',     hex: '#e91e8c' },
+    //{ id: 'c7', name: 'Laranja',  hex: '#e67e22' },
+    { id: 'c8', name: 'Marrom',     hex: '#895129' },
     { id: 'c9', name: 'Cinza',    hex: '#7f8c8d' },
   ],
 
@@ -312,43 +312,28 @@ const DEF = {
     /* ── EXEMPLO: Chaveiro com modelo 3D único ── */
     {
       id: 'prod_chaveiro_01',
-      name: 'Chaveiro coração',
+      name: 'Chaveiro coração pixel art',
       type: 'chaveiro',
-      desc: 'Chaveiro comemorativo.',
+      desc: 'Objeto impresso em duas partes encaixáveis.',
       imgs: [],
-      glb:  [ './assets/Untitled.glb' ],
-      sizes: [ { label: 'Único', price: 15.00 } ],
+      glb:  [ './assets/coracaopixelarteparteum.glb', './assets/coracaopixelartepartedois.glb' ],
+      sizes: [ { label: 'Único', price: 16.00 } ],
       oos: false
     },
 
     /* ── EXEMPLO: Kit 3D com 2 partes ── */
     {
       id: 'prod_kit_01',
-      name: 'Kit 2 Partes',
+      name: 'Chaveiro coração pixel art inteiro',
       type: 'objeto',
-      desc: 'Objeto impresso em duas partes encaixáveis.',
+      desc: '',
       imgs: [],
-      glb:  [ './assets/parte1.glb', './assets/parte2.glb' ],
+      glb:  [ './assets/coracaopixelarteinteiro.glb' ],
       sizes: [ { label: 'Único', price: 11.98 } ],
       oos: false
     },
 
-    /* ── EXEMPLO: Objeto com foto e vários tamanhos ── */
-    {
-      id: 'prod_vaso_01',
-      name: 'Vaso Geométrico',
-      type: 'objeto',
-      desc: 'Vaso decorativo impresso na P1S.',
-      imgs: [],
-      glb:  [],
-      sizes: [
-        { label: 'Pequeno (10cm)', price: 35.00 },
-        { label: 'Médio (15cm)',   price: 55.00 },
-        { label: 'Grande (20cm)',  price: 85.00 }
-      ],
-      oos: false
-    },
-
+    
   ]
   /* ↑ não esqueça a vírgula no produto anterior ao adicionar um novo */
 
