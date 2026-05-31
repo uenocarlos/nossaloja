@@ -521,7 +521,7 @@ const DEF = {
   waNumber: '5553999387571',
 
   colors: [
-    { id: 'c2', name: 'Branco',   hex: '#fffff' },
+    { id: 'c2', name: 'Branco',   hex: '#ffffff ' },
     { id: 'c3', name: 'Vermelho', hex: '#c0392b' },
     { id: 'c4', name: 'Azul',     hex: '#2980b9' },
     { id: 'c6', name: 'Amarelo',  hex: '#f1c40f' },
@@ -531,8 +531,8 @@ const DEF = {
 
   products: [
     {
-      id: 'prod_chaveiro_letra',
-      name: 'Chaveiro coração com letra',
+      id: 'prod_chaveiro_01',
+      name: 'Chaveiro coração com letra 2 partes',
       type: 'chaveiro',
       desc: 'Corpo e letra com cores independentes — 1 único GLB.',
       imgs: [],
@@ -548,8 +548,8 @@ const DEF = {
     },
     
     {
-      id: 'prod_chaveiro_01',
-      name: 'Chaveiro coração pixel art',
+      id: 'prod_chaveiro_02',
+      name: 'Chaveiro coração pixel art 2 partes',
       type: 'chaveiro',
       desc: 'Objeto impresso em duas partes encaixáveis.',
       imgs: [],
@@ -565,8 +565,8 @@ const DEF = {
     },
     
     {
-      id: 'prod_chaveiro_02',
-      name: 'Chaveiro coração pixel art inteiro',
+      id: 'prod_chaveiro_03',
+      name: 'Chaveiro coração pixel art inteiro.',
       type: 'chaveiro',
       desc: '',
       imgs: [],
@@ -574,6 +574,64 @@ const DEF = {
       sizes: [ { label: 'Único', price: 16.00 } ],
       oos: false
     },
+
+    {
+      id: 'prod_chaveiro_04',
+      name: 'Chaveiro gato bolinha 2 partes',
+      type: 'chaveiro',
+      desc: 'Objeto impresso em duas partes encaixáveis.',
+      imgs: [],
+      glbParts: {
+        src: './assets/coracaopixelart.glb',
+        parts: [
+          { label: 'Gato 1',  materialIndex: 0 },
+          { label: 'Gato 2',  materialIndex: 1 },
+        ]
+      },
+      sizes: [ { label: 'Único', price: 16.00 } ],
+      oos: false
+    },
+
+      {
+      id: 'prod_obj_01',
+      name: 'Escultura casal',
+      type: 'objeto decorativo',
+      desc: 'Objeto impresso em duas partes encaixáveis.',
+      imgs: [],
+      glbParts: {
+        src: './assets/esculturacasal.glb',
+        parts: [
+          { label: 'Casal',  materialIndex: 0 },
+          { label: 'Coração',  materialIndex: 1 },
+        ]
+      },
+      sizes: [ { label: 'Único', price: 16.00 } ],
+      oos: false
+    },
+
+    {
+      id: 'prod_obj_02',
+      name: 'Vazinho amoroso',
+      type: 'objeto',
+      desc: 'objeto decorativo',
+      imgs: [],
+      glb:  [ './assets/vazocoracao.glb' ],
+      sizes: [ { label: 'Único', price: 16.00 } ],
+      oos: false
+    },
+
+     {
+      id: 'prod_obj_03',
+      name: 'Rosa com coração',
+      type: 'objeto',
+      desc: 'objeto decorativo',
+      imgs: [],
+      glb:  [ './assets/vazocoracao.glb' ],
+      sizes: [ { label: 'Único', price: 16.00 } ],
+      oos: false
+    },
+
+  
 
     /*{
       id: 'prod_chaveiro_04',
