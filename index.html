@@ -19,11 +19,13 @@
   --ff-sans:  'Outfit', system-ui, sans-serif;
   --shadow: 0 2px 16px rgba(26,23,20,.08);
   --shadow-lg: 0 8px 40px rgba(26,23,20,.13);
+  --cart-w: 380px;
 }
 html { scroll-behavior: smooth; }
 body {
   font-family: var(--ff-sans); background: var(--cream); color: var(--ink);
   font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 /* ─── HEADER ─── */
@@ -55,6 +57,8 @@ header {
 .btn-wa { background: var(--wa); color: #fff; }
 .btn-wa:hover { filter: brightness(1.08); }
 .btn-sm { padding: 7px 14px; font-size: .75rem; }
+.btn-ember { background: var(--ember); color: #fff; }
+.btn-ember:hover { background: var(--ember2); }
 
 /* ─── HERO ─── */
 .hero {
@@ -164,7 +168,7 @@ model-viewer {
 .card-size-sel:focus { border-color: var(--fog); }
 
 .card-bottom {
-  display: flex; align-items: center; justify-content: space-between; margin-top: auto;
+  display: flex; align-items: center; justify-content: space-between; margin-top: auto; gap: 10px;
 }
 .card-price {
   font-family: var(--ff-serif); font-size: 1.3rem; font-weight: 600;
@@ -172,18 +176,50 @@ model-viewer {
 }
 .card-price small { font-family: var(--ff-sans); font-size: .7rem; font-weight: 400; color: var(--stone); margin-right: 2px; }
 
+/* ─── QTY STEPPER ─── */
+.qty-stepper {
+  display: flex; align-items: center; gap: 0;
+  border: 1px solid var(--mist); border-radius: 100px;
+  overflow: hidden; background: var(--cream);
+}
+.qty-btn {
+  width: 30px; height: 30px; border: none; background: transparent;
+  font-size: 1.1rem; font-weight: 500; color: var(--ink2);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .14s; flex-shrink: 0;
+}
+.qty-btn:hover { background: var(--mist); }
+.qty-num {
+  min-width: 26px; text-align: center; font-size: .85rem;
+  font-weight: 600; color: var(--ink); user-select: none;
+}
+
 .card-colors { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 14px; }
 .cdot {
   width: 18px; height: 18px; border-radius: 50%;
   border: 2px solid rgba(255,255,255,.8);
   box-shadow: 0 0 0 1px rgba(0,0,0,.1);
-  transition: transform .15s;
+  transition: transform .15s, box-shadow .15s;
+  cursor: pointer;
 }
 .cdot:hover { transform: scale(1.2); }
+.cdot.selected {
+  box-shadow: 0 0 0 2px var(--ink);
+  transform: scale(1.15);
+}
 .part-label {
   font-size: .7rem; color: var(--stone); margin-top: 6px; margin-bottom: 3px;
   text-transform: uppercase; letter-spacing: .05em; font-weight: 600;
 }
+
+/* ─── ADD TO CART ROW ─── */
+.card-actions {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin-top: auto; padding-top: 12px;
+  border-top: 1px solid var(--mist);
+}
+.card-price-wrap { display: flex; flex-direction: column; }
+.card-price-label { font-size: .68rem; color: var(--stone); text-transform: uppercase; letter-spacing: .05em; }
 
 /* ─── EMPTY ─── */
 .empty { grid-column: 1/-1; padding: 80px 20px; text-align: center; color: var(--stone); }
@@ -200,25 +236,194 @@ footer { border-top: 1px solid var(--mist); background: var(--paper); }
 .footer-inner .logo { font-size: 1.1rem; }
 
 /* ─── TOASTS ─── */
-.toasts { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toasts { position: fixed; bottom: 24px; left: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
 .t {
   background: var(--ink); color: var(--paper); padding: 12px 18px; border-radius: 12px;
   font-size: .82rem; font-weight: 500; display: flex; align-items: center; gap: 8px;
   animation: tslide .25s ease; box-shadow: var(--shadow-lg); max-width: 300px;
 }
-@keyframes tslide { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes tslide { from { transform: translateX(-40px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ═══════════════════════════════════════════════
+   CARRINHO FLUTUANTE
+═══════════════════════════════════════════════ */
+
+/* Botão flutuante */
+.cart-fab {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 300;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: 16px 0 0 16px;
+  padding: 16px 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  box-shadow: -4px 0 24px rgba(26,23,20,.18);
+  transition: background .18s, transform .18s;
+}
+.cart-fab:hover { background: var(--ink2); transform: translateY(-50%) translateX(-2px); }
+.cart-fab svg { display: block; }
+.cart-fab-label {
+  font-size: .6rem; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; writing-mode: vertical-rl;
+  text-orientation: mixed; transform: rotate(180deg);
+  line-height: 1;
+}
+.cart-badge {
+  position: absolute;
+  top: 8px; right: 10px;
+  background: var(--ember);
+  color: #fff;
+  font-size: .62rem; font-weight: 700;
+  min-width: 18px; height: 18px;
+  border-radius: 100px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 4px;
+  opacity: 0; transform: scale(.5);
+  transition: opacity .2s, transform .2s;
+}
+.cart-badge.show { opacity: 1; transform: scale(1); }
+
+/* Overlay */
+.cart-overlay {
+  position: fixed; inset: 0; background: rgba(26,23,20,.35);
+  z-index: 400; opacity: 0; pointer-events: none;
+  transition: opacity .3s;
+  backdrop-filter: blur(2px);
+}
+.cart-overlay.open { opacity: 1; pointer-events: all; }
+
+/* Sidebar */
+.cart-sidebar {
+  position: fixed; top: 0; right: 0; height: 100vh;
+  width: var(--cart-w); max-width: 100vw;
+  background: var(--paper);
+  z-index: 500;
+  display: flex; flex-direction: column;
+  transform: translateX(100%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  box-shadow: -8px 0 48px rgba(26,23,20,.15);
+}
+.cart-sidebar.open { transform: translateX(0); }
+
+.cart-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--mist);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.cart-title {
+  font-family: var(--ff-serif); font-size: 1.3rem; font-weight: 600;
+  display: flex; align-items: center; gap: 10px;
+}
+.cart-close {
+  width: 36px; height: 36px; border-radius: 50%; border: none;
+  background: var(--mist); color: var(--ink2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; transition: background .15s;
+}
+.cart-close:hover { background: var(--fog); }
+
+.cart-body {
+  flex: 1; overflow-y: auto; padding: 16px 24px;
+}
+
+/* Item no carrinho */
+.cart-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px 0; border-bottom: 1px solid var(--mist);
+  animation: fade .2s ease;
+}
+.cart-item:last-child { border-bottom: none; }
+.cart-item-info { flex: 1; min-width: 0; }
+.cart-item-name {
+  font-family: var(--ff-serif); font-size: .92rem; font-weight: 600;
+  line-height: 1.3; margin-bottom: 4px;
+}
+.cart-item-meta {
+  font-size: .75rem; color: var(--stone); line-height: 1.5;
+}
+.cart-item-meta span {
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.cart-color-swatch {
+  display: inline-block;
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 1px solid rgba(0,0,0,.15);
+  vertical-align: middle;
+}
+.cart-item-right {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0;
+}
+.cart-item-price {
+  font-family: var(--ff-serif); font-size: 1rem; font-weight: 600; white-space: nowrap;
+}
+.cart-item-remove {
+  background: none; border: none; color: var(--fog); cursor: pointer;
+  font-size: .75rem; padding: 0; transition: color .15s;
+  display: flex; align-items: center; gap: 3px;
+}
+.cart-item-remove:hover { color: #c0392b; }
+
+/* Cart stepper (menor) */
+.cart-qty {
+  display: flex; align-items: center; gap: 0;
+  border: 1px solid var(--mist); border-radius: 100px;
+  overflow: hidden; background: var(--cream);
+}
+.cart-qty-btn {
+  width: 24px; height: 24px; border: none; background: transparent;
+  font-size: 1rem; font-weight: 500; color: var(--ink2);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .14s;
+}
+.cart-qty-btn:hover { background: var(--mist); }
+.cart-qty-num {
+  min-width: 22px; text-align: center; font-size: .8rem;
+  font-weight: 600; color: var(--ink); user-select: none;
+}
+
+/* Cart empty */
+.cart-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 200px; color: var(--stone); gap: 10px;
+}
+.cart-empty svg { opacity: .25; }
+.cart-empty p { font-size: .88rem; }
+
+.cart-footer {
+  padding: 16px 24px 24px;
+  border-top: 1px solid var(--mist);
+  flex-shrink: 0;
+}
+.cart-total-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 16px;
+}
+.cart-total-label { font-size: .78rem; color: var(--stone); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.cart-total-val { font-family: var(--ff-serif); font-size: 1.5rem; font-weight: 600; }
 
 /* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
   .header-inner, .footer-inner { padding: 0 20px; }
   .section { padding: 0 20px 60px; }
   .hero { padding: 40px 20px; }
+  :root { --cart-w: 100vw; }
+  .cart-fab { border-radius: 12px 0 0 12px; padding: 12px 10px; }
 }
 </style>
 </head>
 <body>
 
+<!-- ─── HEADER ─── -->
 <header>
   <div class="header-inner">
     <div class="logo">Nossa lojinha <em>3D</em></div>
@@ -234,12 +439,14 @@ footer { border-top: 1px solid var(--mist); background: var(--paper); }
   </div>
 </header>
 
+<!-- ─── HERO ─── -->
 <div class="hero">
   <div class="hero-eyebrow">Impressão 3D</div>
   <h1>Ideias que nascem<br><em>camada por camada</em></h1>
   <p class="hero-sub">Peças únicas, chaveiros e decorações. Escolha o produto, a cor e fale diretamente conosco pelo WhatsApp.</p>
 </div>
 
+<!-- ─── CATÁLOGO ─── -->
 <div class="section">
   <div class="section-head">
     <div class="section-title">Catálogo</div>
@@ -262,20 +469,57 @@ footer { border-top: 1px solid var(--mist); background: var(--paper); }
   </div>
 </footer>
 
+<!-- ─── CARRINHO FAB ─── -->
+<button class="cart-fab" onclick="openCart()" aria-label="Abrir carrinho">
+  <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <path d="M16 10a4 4 0 01-8 0"/>
+  </svg>
+  <span class="cart-fab-label">Carrinho</span>
+  <span class="cart-badge" id="cartBadge">0</span>
+</button>
+
+<!-- ─── OVERLAY + SIDEBAR ─── -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-header">
+    <div class="cart-title">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <path d="M16 10a4 4 0 01-8 0"/>
+      </svg>
+      Carrinho
+    </div>
+    <button class="cart-close" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-body" id="cartBody"></div>
+  <div class="cart-footer">
+    <div class="cart-total-row">
+      <span class="cart-total-label">Total</span>
+      <span class="cart-total-val" id="cartTotal">R$ 0,00</span>
+    </div>
+    <button class="btn btn-wa" style="width:100%;justify-content:center;font-size:.88rem;padding:13px 18px" onclick="sendCartWA()">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.118 1.528 5.851L.057 23.999l6.304-1.649C8.07 23.447 10.002 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.651-.52-5.157-1.428l-.369-.221-3.743.979.999-3.648-.242-.374C2.52 15.677 2 13.893 2 12 2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+      </svg>
+      Pedir pelo WhatsApp
+    </button>
+  </div>
+</div>
+
 <div class="toasts" id="toasts"></div>
 
 <script>
 /* ══════════════════════════════════════════════════════════
-   CONFIGURAÇÃO MANUAL — edite aqui tudo que precisar
+   CONFIGURAÇÃO MANUAL
 ══════════════════════════════════════════════════════════ */
 const DEF = {
-
-  /* ── Número do WhatsApp (DDI + DDD + número, só dígitos) ── */
   waNumber: '5553999387571',
 
-  /* ══════════════════════════════════════════════════════
-     CORES — aparecem em todos os produtos como bolinhas clicáveis.
-  ══════════════════════════════════════════════════════ */
   colors: [
     { id: 'c2', name: 'Branco',   hex: '#f5f0e8' },
     { id: 'c3', name: 'Vermelho', hex: '#c0392b' },
@@ -285,54 +529,23 @@ const DEF = {
     { id: 'c9', name: 'Cinza',    hex: '#7f8c8d' },
   ],
 
-  /* ══════════════════════════════════════════════════════
-     PRODUTOS
-
-     NOVIDADE: campo "glbParts"
-     ─────────────────────────────────────────────────────
-     Use quando tiver 1 único arquivo .glb com múltiplos
-     materiais/meshes que devem ter cores independentes.
-
-     glbParts: {
-       src: './assets/coracaoletra.glb',   ← arquivo único
-       parts: [
-         { label: 'Coração',  materialIndex: 0 },
-         { label: 'Letra',  materialIndex: 1 },
-         // Adicione mais se tiver mais materiais
-       ]
-     }
-
-     materialIndex → índice do material no GLB (0 = primeiro,
-     1 = segundo, etc.). No Blender, a ordem dos materiais
-     na lista "Material Properties" define o índice.
-
-     ─────────────────────────────────────────────────────
-     OUTRAS OPÇÕES (continuam funcionando):
-       glb: ['arquivo.glb']            → 1 GLB, 1 cor global
-       glb: ['parte1.glb','parte2.glb'] → 2 GLBs separados
-     ─────────────────────────────────────────────────────
-  ══════════════════════════════════════════════════════ */
   products: [
-
-    /* ─── Exemplo: 1 GLB com 2 materiais (NOVO!) ─── */
     {
       id: 'prod_chaveiro_letra',
       name: 'Chaveiro coração com letra',
       type: 'chaveiro',
-      desc: 'Corpo e letra com cores independentes — exportado como 1 único GLB.',
+      desc: 'Corpo e letra com cores independentes — 1 único GLB.',
       imgs: [],
       glbParts: {
-        src: './assets/coracaoletra.glb',
+        src: './assets/coracao_letra.glb',
         parts: [
-          { label: 'Coração',  materialIndex: 0 },
+          { label: 'Corpo',  materialIndex: 0 },
           { label: 'Letra',  materialIndex: 1 },
         ]
       },
       sizes: [ { label: 'Único', price: 18.00 } ],
       oos: false
     },
-
-    /* ─── Exemplo: Kit com 2 GLBs separados (como antes) ─── */
     {
       id: 'prod_chaveiro_01',
       name: 'Chaveiro coração pixel art',
@@ -343,8 +556,6 @@ const DEF = {
       sizes: [ { label: 'Único', price: 16.00 } ],
       oos: false
     },
-
-    /* ─── 1 GLB, 1 cor global ─── */
     {
       id: 'prod_chaveiro_02',
       name: 'Chaveiro coração pixel art inteiro',
@@ -355,7 +566,6 @@ const DEF = {
       sizes: [ { label: 'Único', price: 16.00 } ],
       oos: false
     },
-
     {
       id: 'prod_chaveiro_03',
       name: 'Chaveiro coração',
@@ -366,7 +576,6 @@ const DEF = {
       sizes: [ { label: 'Único', price: 16.00 } ],
       oos: false
     },
-
     {
       id: 'prod_chaveiro_04',
       name: 'Chaveiro coração pixel art',
@@ -377,13 +586,209 @@ const DEF = {
       sizes: [ { label: 'Único', price: 16.00 } ],
       oos: false
     },
-
   ]
 };
-/* ══════════════════════════════════════════════════════════
-   LÓGICA — não mexa abaixo daqui
-══════════════════════════════════════════════════════════ */
 
+/* ══════════════════════════════════════════════════════════
+   ESTADO DO CARRINHO
+   cart = [ { cartId, productId, name, sizeLabel, price, qty, colors: {partLabel: {name,hex}} } ]
+══════════════════════════════════════════════════════════ */
+let cart = [];
+let cartOpen = false;
+
+/* ── Estado de cor selecionada por produto ── */
+/* selectedColors[prodId] = { 'partLabel' ou 'global': { name, hex } } */
+const selectedColors = {};
+
+function getSelectedColors(prodId) {
+  return selectedColors[prodId] || {};
+}
+
+/* ── Carrinho: abrir / fechar ── */
+function openCart() {
+  cartOpen = true;
+  document.getElementById('cartSidebar').classList.add('open');
+  document.getElementById('cartOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  renderCart();
+}
+function closeCart() {
+  cartOpen = false;
+  document.getElementById('cartSidebar').classList.remove('open');
+  document.getElementById('cartOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ── Adicionar ao carrinho ── */
+function addToCart(productId) {
+  const p = DEF.products.find(x => x.id === productId);
+  if (!p || p.oos) return;
+
+  const sel = document.getElementById('sel' + productId);
+  let price = 0, sizeLabel = 'Único';
+  if (sel) {
+    const opt = sel.options[sel.selectedIndex];
+    price = parseFloat(opt.getAttribute('data-price')) || 0;
+    sizeLabel = opt.text.split(' — ')[0];
+  } else if (p.sizes && p.sizes[0]) {
+    price = p.sizes[0].price || 0;
+    sizeLabel = p.sizes[0].label || 'Único';
+  }
+
+  const qtyEl = document.getElementById('qty-' + productId);
+  const qty = qtyEl ? parseInt(qtyEl.dataset.qty) || 1 : 1;
+
+  const colors = selectedColors[productId] || {};
+
+  /* Gera ID único para este item (produto + tamanho + cores) */
+  const colorKey = JSON.stringify(colors);
+  const existing = cart.find(i => i.productId === productId && i.sizeLabel === sizeLabel && JSON.stringify(i.colors) === colorKey);
+  if (existing) {
+    existing.qty += qty;
+  } else {
+    cart.push({
+      cartId: Date.now() + Math.random(),
+      productId, name: p.name, sizeLabel, price, qty,
+      colors: JSON.parse(colorKey)
+    });
+  }
+
+  updateCartBadge();
+  if (cartOpen) renderCart();
+
+  /* Reset qty para 1 */
+  if (qtyEl) { qtyEl.dataset.qty = 1; qtyEl.textContent = 1; }
+
+  toast('✓ Adicionado ao carrinho');
+}
+
+/* ── Remover item ── */
+function removeCartItem(cartId) {
+  cart = cart.filter(i => i.cartId !== cartId);
+  updateCartBadge();
+  renderCart();
+}
+
+/* ── Alterar qty no carrinho ── */
+function changeCartQty(cartId, delta) {
+  const item = cart.find(i => i.cartId === cartId);
+  if (!item) return;
+  item.qty = Math.max(1, item.qty + delta);
+  renderCart();
+  updateCartBadge();
+}
+
+/* ── Atualizar badge ── */
+function updateCartBadge() {
+  const total = cart.reduce((s, i) => s + i.qty, 0);
+  const badge = document.getElementById('cartBadge');
+  badge.textContent = total;
+  badge.classList.toggle('show', total > 0);
+}
+
+/* ── Renderizar carrinho ── */
+function renderCart() {
+  const body = document.getElementById('cartBody');
+  const totalEl = document.getElementById('cartTotal');
+  if (!body) return;
+
+  if (!cart.length) {
+    body.innerHTML = `<div class="cart-empty">
+      <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
+        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <path d="M16 10a4 4 0 01-8 0"/>
+      </svg>
+      <p>Seu carrinho está vazio</p>
+    </div>`;
+    totalEl.textContent = 'R$ 0,00';
+    return;
+  }
+
+  let totalVal = 0;
+  body.innerHTML = cart.map(item => {
+    totalVal += item.price * item.qty;
+
+    /* ─ montar linha de cores ─ */
+    let colorLines = '';
+    const colKeys = Object.keys(item.colors);
+    if (colKeys.length > 0) {
+      colKeys.forEach(part => {
+        const c = item.colors[part];
+        colorLines += `<span>
+          <span class="cart-color-swatch" style="background:${c.hex}"></span>
+          ${part !== 'global' ? part + ': ' : ''}${c.name}
+        </span><br>`;
+      });
+    } else {
+      colorLines = '<span style="font-style:italic">Cor não selecionada</span>';
+    }
+
+    return `<div class="cart-item" data-cid="${item.cartId}">
+      <div class="cart-item-info">
+        <div class="cart-item-name">${esc(item.name)}</div>
+        <div class="cart-item-meta">
+          <span>Tam.: ${esc(item.sizeLabel)}</span><br>
+          ${colorLines}
+        </div>
+      </div>
+      <div class="cart-item-right">
+        <div class="cart-item-price">R$ ${fmt(item.price * item.qty)}</div>
+        <div class="cart-qty">
+          <button class="cart-qty-btn" onclick="changeCartQty(${item.cartId},-1)">−</button>
+          <span class="cart-qty-num">${item.qty}</span>
+          <button class="cart-qty-btn" onclick="changeCartQty(${item.cartId},1)">+</button>
+        </div>
+        <button class="cart-item-remove" onclick="removeCartItem(${item.cartId})">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+            <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+          </svg>
+          Remover
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  totalEl.textContent = 'R$ ' + fmt(totalVal);
+}
+
+/* ── Enviar pedido via WhatsApp ── */
+function sendCartWA() {
+  if (!cart.length) { toast('Carrinho vazio!'); return; }
+
+  let lines = ['Olá! Gostaria de fazer um pedido:\n'];
+  let total = 0;
+
+  cart.forEach((item, idx) => {
+    lines.push(`*${idx + 1}. ${item.name}*`);
+    lines.push(`   Tamanho: ${item.sizeLabel}`);
+
+    const colKeys = Object.keys(item.colors);
+    if (colKeys.length > 0) {
+      colKeys.forEach(part => {
+        const c = item.colors[part];
+        const partLabel = part !== 'global' ? part + ': ' : 'Cor: ';
+        lines.push(`   ${partLabel}${c.name}`);
+      });
+    } else {
+      lines.push(`   Cor: a combinar`);
+    }
+
+    lines.push(`   Qtd: ${item.qty} × R$ ${fmt(item.price)} = R$ ${fmt(item.price * item.qty)}`);
+    lines.push('');
+    total += item.price * item.qty;
+  });
+
+  lines.push(`*Total: R$ ${fmt(total)}*`);
+
+  const msg = lines.join('\n');
+  window.open(`https://wa.me/${DEF.waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+/* ══════════════════════════════════════════════════════════
+   LOJA
+══════════════════════════════════════════════════════════ */
 let curFilter = 'all';
 
 function setFilter(f, btn) {
@@ -423,16 +828,14 @@ function renderShop() {
 function cardHTML(p, i) {
   let imgs    = Array.isArray(p.imgs) ? p.imgs.filter(Boolean) : [];
   let glbs    = Array.isArray(p.glb)  ? p.glb.filter(Boolean)  : [];
-  let glbParts = p.glbParts || null;   // { src, parts: [{label, materialIndex}] }
+  let glbParts = p.glbParts || null;
 
   const oosTag = p.oos ? '<span class="badge badge-oos">Esgotado</span>' : '';
   let imgSection = '';
   let colorSections = '';
   const safeColors = Array.isArray(DEF.colors) ? DEF.colors : [];
 
-  /* ════════════════════════════════════════════════════
-     MODO A: 1 GLB com múltiplos materiais (glbParts)
-     ════════════════════════════════════════════════════ */
+  /* ─── MODO A: 1 GLB com múltiplos materiais ─── */
   if (glbParts && glbParts.src) {
     const partCount = (glbParts.parts || []).length;
     const badgeLabel = partCount > 1
@@ -448,33 +851,29 @@ function cardHTML(p, i) {
       <div class="card-badges">${oosTag || badgeLabel}</div>
     </div>`;
 
-    /* Um seletor de cor por material */
     if (partCount > 0) {
-      (glbParts.parts || []).forEach((part, matIdx) => {
+      (glbParts.parts || []).forEach((part) => {
         const dots = safeColors.map(c =>
-          `<div class="cdot" style="background:${c.hex};cursor:pointer" title="${esc(c.name)}"
-            onclick="applyMaterialColor('${p.id}',${part.materialIndex},'${c.hex}')"></div>`
+          `<div class="cdot" id="cdot-${p.id}-${part.label.replace(/\s/g,'_')}-${c.id}"
+            style="background:${c.hex}" title="${esc(c.name)}"
+            onclick="selectColor('${p.id}','${esc(part.label)}',${part.materialIndex},'${c.hex}','${esc(c.name)}',this,'mat')"></div>`
         ).join('');
         colorSections += `<div class="part-label">Cor — ${esc(part.label)}</div>
           <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">${dots}</div>`;
       });
     } else {
-      /* glbParts sem parts definidas → tratar como 1 cor global */
       const dots = safeColors.map(c =>
-        `<div class="cdot" style="background:${c.hex};cursor:pointer" title="${esc(c.name)}"
-          onclick="changeModelColor('${p.id}','${c.hex}')"></div>`
+        `<div class="cdot" id="cdot-${p.id}-global-${c.id}"
+          style="background:${c.hex}" title="${esc(c.name)}"
+          onclick="selectColor('${p.id}','global',-1,'${c.hex}','${esc(c.name)}',this,'all')"></div>`
       ).join('');
       colorSections = `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">${dots}</div>`;
     }
 
-  /* ════════════════════════════════════════════════════
-     MODO B: 2+ GLBs separados
-     ════════════════════════════════════════════════════ */
+  /* ─── MODO B: 2+ GLBs separados ─── */
   } else if (glbs.length > 1) {
     const viewers = glbs.map((url, idx) =>
-      `<model-viewer
-        id="mv-${p.id}-${idx}"
-        src="${esc(url)}"
+      `<model-viewer id="mv-${p.id}-${idx}" src="${esc(url)}"
         auto-rotate camera-controls shadow-intensity="1"
         style="flex:1;min-width:0;height:100%;display:block;background:var(--mist);--poster-color:transparent">
       </model-viewer>`
@@ -485,36 +884,33 @@ function cardHTML(p, i) {
     </div>`;
 
     for (let k = 0; k < glbs.length; k++) {
+      const partLabel = `Parte ${k+1}`;
       const dots = safeColors.map(c =>
-        `<div class="cdot" style="background:${c.hex};cursor:pointer" title="${esc(c.name)}"
-          onclick="changePartColor('${p.id}',${k},'${c.hex}')"></div>`
+        `<div class="cdot" id="cdot-${p.id}-${partLabel.replace(/\s/g,'_')}-${c.id}"
+          style="background:${c.hex}" title="${esc(c.name)}"
+          onclick="selectColor('${p.id}','${partLabel}',${k},'${c.hex}','${esc(c.name)}',this,'glb')"></div>`
       ).join('');
-      colorSections += `<div class="part-label">Cor — Parte ${k+1}</div>
+      colorSections += `<div class="part-label">Cor — ${partLabel}</div>
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">${dots}</div>`;
     }
 
-  /* ════════════════════════════════════════════════════
-     MODO C: 1 GLB, 1 cor global
-     ════════════════════════════════════════════════════ */
+  /* ─── MODO C: 1 GLB global ─── */
   } else if (glbs.length === 1) {
     imgSection = `<div class="card-img">
-      <model-viewer id="mv-${p.id}"
-        src="${esc(glbs[0])}"
+      <model-viewer id="mv-${p.id}" src="${esc(glbs[0])}"
         auto-rotate camera-controls shadow-intensity="1"
         style="width:100%;height:100%;display:block;background:var(--mist);--poster-color:transparent">
       </model-viewer>
       <div class="card-badges">${oosTag || '<span class="badge badge-3d">Interativo 3D</span>'}</div>
     </div>`;
-
     const dots = safeColors.map(c =>
-      `<div class="cdot" style="background:${c.hex};cursor:pointer" title="${esc(c.name)}"
-        onclick="changeModelColor('${p.id}','${c.hex}')"></div>`
+      `<div class="cdot" id="cdot-${p.id}-global-${c.id}"
+        style="background:${c.hex}" title="${esc(c.name)}"
+        onclick="selectColor('${p.id}','global',-1,'${c.hex}','${esc(c.name)}',this,'all')"></div>`
     ).join('');
     colorSections = `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">${dots}</div>`;
 
-  /* ════════════════════════════════════════════════════
-     MODO D: apenas fotos (carousel)
-     ════════════════════════════════════════════════════ */
+  /* ─── MODO D: fotos ─── */
   } else if (imgs.length > 0) {
     const dots = imgs.length > 1
       ? `<div class="card-dots">${imgs.map((_,j) => `<div class="card-dot${j===0?' on':''}" onclick="carouselTo(this,${j})"></div>`).join('')}</div>`
@@ -524,15 +920,14 @@ function cardHTML(p, i) {
       <div class="card-badges">${oosTag}${!p.oos && p.type==='chaveiro' ? '<span class="badge badge-key">Chaveiro</span>' : ''}</div>
       ${dots}
     </div>`;
-
     const dots2 = safeColors.map(c =>
-      `<div class="cdot" style="background:${c.hex};cursor:pointer" title="${esc(c.name)}"></div>`
+      `<div class="cdot" id="cdot-${p.id}-global-${c.id}"
+        style="background:${c.hex}" title="${esc(c.name)}"
+        onclick="selectColor('${p.id}','global',-1,'${c.hex}','${esc(c.name)}',this,'none')"></div>`
     ).join('');
     colorSections = `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">${dots2}</div>`;
 
-  /* ════════════════════════════════════════════════════
-     MODO E: sem imagem
-     ════════════════════════════════════════════════════ */
+  /* ─── MODO E: sem imagem ─── */
   } else {
     imgSection = `<div class="card-img">
       <div class="card-img-empty">
@@ -544,7 +939,6 @@ function cardHTML(p, i) {
       </div>
       ${p.oos ? '<div class="card-badges"><span class="badge badge-oos">Esgotado</span></div>' : ''}
     </div>`;
-    colorSections = '';
   }
 
   /* ─── Tamanho / preço ─── */
@@ -557,36 +951,77 @@ function cardHTML(p, i) {
 
   const defaultPrice = hasSizes ? (p.sizes[0]?.price || 0) : 0;
 
+  /* ─── Ações do card ─── */
+  const actionsRow = p.oos
+    ? `<div class="card-actions">
+        <div class="card-price-wrap">
+          <span class="card-price-label">Valor</span>
+          <div class="card-price" id="pr${p.id}"><small>R$</small>${fmt(defaultPrice)}</div>
+        </div>
+        <span style="font-size:.75rem;color:var(--stone);font-weight:500">Indisponível</span>
+      </div>`
+    : `<div class="card-actions">
+        <div class="card-price-wrap">
+          <span class="card-price-label">Valor</span>
+          <div class="card-price" id="pr${p.id}"><small>R$</small>${fmt(defaultPrice)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="qty-stepper">
+            <button class="qty-btn" onclick="stepQty('${p.id}',-1)">−</button>
+            <span class="qty-num" id="qty-${p.id}" data-qty="1">1</span>
+            <button class="qty-btn" onclick="stepQty('${p.id}',1)">+</button>
+          </div>
+          <button onclick="addToCart('${p.id}')" class="btn btn-ember btn-sm">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 01-8 0"/>
+            </svg>
+            Adicionar
+          </button>
+        </div>
+      </div>`;
+
   return `<div class="card${p.oos?' oos':''}" style="animation:fade .3s ${i*.04}s both">
     ${imgSection}
     <div class="card-body">
       <div class="card-name">${esc(p.name)}</div>
       ${sizeRow}
       ${colorSections}
-      <div class="card-bottom">
-        <div class="card-price" id="pr${p.id}"><small>R$</small>${fmt(defaultPrice)}</div>
-        ${p.oos
-          ? '<span style="font-size:.75rem;color:var(--stone);font-weight:500">Indisponível</span>'
-          : `<button onclick="makeOrder('${p.id}','${esc(p.name)}')" class="btn btn-dark btn-sm">Pedir</button>`}
-      </div>
+      ${actionsRow}
     </div>
   </div>`;
 }
 
-/* ── Pedido via WhatsApp ── */
-function makeOrder(productId, productName) {
-  const sel = document.getElementById('sel' + productId);
-  let valor = 0, varName = '';
-  if (sel) {
-    const opt = sel.options[sel.selectedIndex];
-    valor = parseFloat(opt.getAttribute('data-price')) || 0;
-    varName = ` (Tamanho: ${opt.text.split(' — ')[0]})`;
-  } else {
-    const p = DEF.products.find(x => x.id === productId);
-    if (p && p.sizes && p.sizes[0]) valor = p.sizes[0].price || 0;
+/* ─── Stepper de qty no card ─── */
+function stepQty(prodId, delta) {
+  const el = document.getElementById('qty-' + prodId);
+  if (!el) return;
+  const cur = parseInt(el.dataset.qty) || 1;
+  const next = Math.max(1, cur + delta);
+  el.dataset.qty = next;
+  el.textContent = next;
+}
+
+/* ─── Selecionar cor ─── */
+/* mode: 'mat' (glbParts material), 'glb' (kit GLBs), 'all' (1 GLB todos mats), 'none' (foto) */
+function selectColor(prodId, partLabel, matOrPartIdx, hex, colorName, dotEl, mode) {
+  /* Inicializar registro de cores do produto */
+  if (!selectedColors[prodId]) selectedColors[prodId] = {};
+  selectedColors[prodId][partLabel] = { name: colorName, hex };
+
+  /* Deselect dots do mesmo grupo (mesmo prodId + partLabel) */
+  document.querySelectorAll(`[id^="cdot-${prodId}-${partLabel.replace(/\s/g,'_')}-"]`).forEach(d => d.classList.remove('selected'));
+  dotEl.classList.add('selected');
+
+  /* Aplicar na visualização 3D */
+  if (mode === 'mat') {
+    applyMaterialColor(prodId, matOrPartIdx, hex);
+  } else if (mode === 'glb') {
+    changePartColor(prodId, matOrPartIdx, hex);
+  } else if (mode === 'all') {
+    changeModelColor(prodId, hex);
   }
-  const msg = `Olá! Quero pedir o item: ${productName}${varName} - Valor: R$ ${fmt(valor)}.`;
-  window.open(`https://wa.me/${DEF.waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 function updPrice(id) {
@@ -596,7 +1031,7 @@ function updPrice(id) {
   document.getElementById('pr' + id).innerHTML = `<small>R$</small>${fmt(p.sizes[+sel.value]?.price || 0)}`;
 }
 
-/* ── Carousel ── */
+/* ─── Carousel ─── */
 function initCarousel(el) {
   const imgs = el.querySelectorAll('img');
   if (imgs.length < 2) return;
@@ -608,14 +1043,13 @@ function initCarousel(el) {
     imgs[cur].classList.add('on'); dots[cur]?.classList.add('on');
   }, 3200);
 }
-
 function carouselTo(dot, idx) {
   const c = dot.closest('.card-img');
   c.querySelectorAll('img').forEach((img, i) => img.classList.toggle('on', i === idx));
   c.querySelectorAll('.card-dot').forEach((d, i) => d.classList.toggle('on', i === idx));
 }
 
-/* ── WhatsApp ── */
+/* ─── WhatsApp contato geral ─── */
 function goWaTop() {
   const texto = encodeURIComponent('Olá! Visitei a loja Forma 3D e gostaria de informações.');
   window.open(`https://wa.me/${DEF.waNumber}?text=${texto}`, '_blank');
@@ -624,16 +1058,13 @@ function goWaTop() {
 /* ══════════════════════════════════════════════════════════
    FUNÇÕES DE COR EM MODELOS 3D
 ══════════════════════════════════════════════════════════ */
-
-/** Aplica cor a UM material específico pelo índice */
 function applyMaterialColor(prodId, materialIndex, hex) {
   const mv = document.getElementById('mv-' + prodId);
   if (!mv) return;
   const [r, g, b] = hexToRgb(hex);
   const apply = () => {
     const mats = mv.model && mv.model.materials;
-    if (!mats) return;
-    if (mats[materialIndex]) {
+    if (mats && mats[materialIndex]) {
       mats[materialIndex].pbrMetallicRoughness.setBaseColorFactor([r, g, b, 1]);
     }
   };
@@ -641,7 +1072,6 @@ function applyMaterialColor(prodId, materialIndex, hex) {
   else mv.addEventListener('load', apply, { once: true });
 }
 
-/** Aplica cor a TODOS os materiais do modelo (1 GLB, 1 cor) */
 function changeModelColor(prodId, hex) {
   const mv = document.getElementById('mv-' + prodId);
   if (!mv) return;
@@ -657,10 +1087,19 @@ function changeModelColor(prodId, hex) {
   else mv.addEventListener('load', apply, { once: true });
 }
 
-/** Aplica cor ao modelo de uma parte (kit de GLBs separados) */
 function changePartColor(prodId, partIdx, hex) {
-  const mv = document.getElementById('mv-' + prodId + '-' + partIdx);
-  if (mv) changeModelColor(prodId + '-' + partIdx, hex);
+  const mv = document.getElementById(`mv-${prodId}-${partIdx}`);
+  if (!mv) return;
+  const [r, g, b] = hexToRgb(hex);
+  const apply = () => {
+    if (mv.model && mv.model.materials) {
+      mv.model.materials.forEach(mat => {
+        mat.pbrMetallicRoughness.setBaseColorFactor([r, g, b, 1]);
+      });
+    }
+  };
+  if (mv.model) apply();
+  else mv.addEventListener('load', apply, { once: true });
 }
 
 function hexToRgb(hex) {
@@ -676,6 +1115,16 @@ function fmt(n) { return Number(n).toLocaleString('pt-BR', { minimumFractionDigi
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
                         .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+let toastTimer;
+function toast(msg) {
+  const box = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 't';
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => el.remove(), 2800);
 }
 
 /* ─── Boot ─── */
