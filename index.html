@@ -219,7 +219,6 @@ footer { border-top: 1px solid var(--mist); background: var(--paper); }
 </head>
 <body>
 
-<!-- ─── LOJA ─── -->
 <header>
   <div class="header-inner">
     <div class="logo">Nossa lojinha <em>3D</em></div>
@@ -276,40 +275,64 @@ const DEF = {
 
   /* ══════════════════════════════════════════════════════
      CORES — aparecem em todos os produtos como bolinhas clicáveis.
-     Adicione ou remova objetos { id, name, hex } livremente.
   ══════════════════════════════════════════════════════ */
   colors: [
-    //{ id: 'c1', name: 'Preto',    hex: '#1a1a1a' },
     { id: 'c2', name: 'Branco',   hex: '#f5f0e8' },
     { id: 'c3', name: 'Vermelho', hex: '#c0392b' },
     { id: 'c4', name: 'Azul',     hex: '#2980b9' },
-    //{ id: 'c5', name: 'Verde',    hex: '#27ae60' },
     { id: 'c6', name: 'Amarelo',  hex: '#f1c40f' },
-    //{ id: 'c7', name: 'Laranja',  hex: '#e67e22' },
-    { id: 'c8', name: 'Marrom',     hex: '#895129' },
+    { id: 'c8', name: 'Marrom',   hex: '#895129' },
     { id: 'c9', name: 'Cinza',    hex: '#7f8c8d' },
   ],
 
   /* ══════════════════════════════════════════════════════
-     PRODUTOS — adicione quantos quiser seguindo os exemplos.
+     PRODUTOS
 
-     Campos:
-       id      → string única (qualquer texto sem espaço)
-       name    → nome exibido no card
-       type    → 'chaveiro' ou 'objeto'
-       desc    → descrição curta (opcional, não exibida ainda)
-       imgs    → lista de URLs de fotos (pode ser vazia [])
-       glb     → lista de URLs de modelos .glb (pode ser vazia [])
-                 1 URL  = visualizador único
-                 2+ URL = kit com uma parte por viewer
-       sizes   → lista de tamanhos/preços
-                 chaveiro simples → [ { label: 'Único', price: 12.00 } ]
-                 objeto com opções → [ { label: 'Pequeno', price: 35 }, ... ]
-       oos     → false = disponível | true = esgotado
+     NOVIDADE: campo "glbParts"
+     ─────────────────────────────────────────────────────
+     Use quando tiver 1 único arquivo .glb com múltiplos
+     materiais/meshes que devem ter cores independentes.
+
+     glbParts: {
+       src: './assets/coracao_letra.glb',   ← arquivo único
+       parts: [
+         { label: 'Corpo',  materialIndex: 0 },
+         { label: 'Letra',  materialIndex: 1 },
+         // Adicione mais se tiver mais materiais
+       ]
+     }
+
+     materialIndex → índice do material no GLB (0 = primeiro,
+     1 = segundo, etc.). No Blender, a ordem dos materiais
+     na lista "Material Properties" define o índice.
+
+     ─────────────────────────────────────────────────────
+     OUTRAS OPÇÕES (continuam funcionando):
+       glb: ['arquivo.glb']            → 1 GLB, 1 cor global
+       glb: ['parte1.glb','parte2.glb'] → 2 GLBs separados
+     ─────────────────────────────────────────────────────
   ══════════════════════════════════════════════════════ */
   products: [
 
-    /* ── EXEMPLO: Chaveiro com modelo 3D único ── */
+    /* ─── Exemplo: 1 GLB com 2 materiais (NOVO!) ─── */
+    {
+      id: 'prod_chaveiro_letra',
+      name: 'Chaveiro coração com letra',
+      type: 'chaveiro',
+      desc: 'Corpo e letra com cores independentes — exportado como 1 único GLB.',
+      imgs: [],
+      glbParts: {
+        src: './assets/coracao_letra.glb',
+        parts: [
+          { label: 'Corpo',  materialIndex: 0 },
+          { label: 'Letra',  materialIndex: 1 },
+        ]
+      },
+      sizes: [ { label: 'Único', price: 18.00 } ],
+      oos: false
+    },
+
+    /* ─── Exemplo: Kit com 2 GLBs separados (como antes) ─── */
     {
       id: 'prod_chaveiro_01',
       name: 'Chaveiro coração pixel art',
@@ -321,7 +344,7 @@ const DEF = {
       oos: false
     },
 
-    /* ── EXEMPLO: Kit 3D com 2 partes ── */
+    /* ─── 1 GLB, 1 cor global ─── */
     {
       id: 'prod_chaveiro_02',
       name: 'Chaveiro coração pixel art inteiro',
@@ -343,7 +366,7 @@ const DEF = {
       sizes: [ { label: 'Único', price: 16.00 } ],
       oos: false
     },
-    
+
     {
       id: 'prod_chaveiro_04',
       name: 'Chaveiro coração pixel art',
@@ -355,13 +378,10 @@ const DEF = {
       oos: false
     },
 
-    
   ]
-  /* ↑ não esqueça a vírgula no produto anterior ao adicionar um novo */
-
 };
 /* ══════════════════════════════════════════════════════════
-   FIM DA CONFIGURAÇÃO — não mexa abaixo daqui
+   LÓGICA — não mexa abaixo daqui
 ══════════════════════════════════════════════════════════ */
 
 let curFilter = 'all';
@@ -401,22 +421,55 @@ function renderShop() {
 }
 
 function cardHTML(p, i) {
-  let imgs = Array.isArray(p.imgs) ? p.imgs.filter(Boolean) : [];
-  let glbs = Array.isArray(p.glb)  ? p.glb.filter(Boolean)  : [];
+  let imgs    = Array.isArray(p.imgs) ? p.imgs.filter(Boolean) : [];
+  let glbs    = Array.isArray(p.glb)  ? p.glb.filter(Boolean)  : [];
+  let glbParts = p.glbParts || null;   // { src, parts: [{label, materialIndex}] }
 
   const oosTag = p.oos ? '<span class="badge badge-oos">Esgotado</span>' : '';
   let imgSection = '';
+  let colorSections = '';
+  const safeColors = Array.isArray(DEF.colors) ? DEF.colors : [];
 
-  if (glbs.length === 1) {
+  /* ════════════════════════════════════════════════════
+     MODO A: 1 GLB com múltiplos materiais (glbParts)
+     ════════════════════════════════════════════════════ */
+  if (glbParts && glbParts.src) {
+    const partCount = (glbParts.parts || []).length;
+    const badgeLabel = partCount > 1
+      ? `<span class="badge badge-3d">${partCount} materiais</span>`
+      : '<span class="badge badge-3d">Interativo 3D</span>';
+
     imgSection = `<div class="card-img">
       <model-viewer id="mv-${p.id}"
-        src="${esc(glbs[0])}"
+        src="${esc(glbParts.src)}"
         auto-rotate camera-controls shadow-intensity="1"
         style="width:100%;height:100%;display:block;background:var(--mist);--poster-color:transparent">
       </model-viewer>
-      <div class="card-badges">${oosTag || '<span class="badge badge-3d">Interativo 3D</span>'}</div>
+      <div class="card-badges">${oosTag || badgeLabel}</div>
     </div>`;
 
+    /* Um seletor de cor por material */
+    if (partCount > 0) {
+      (glbParts.parts || []).forEach((part, matIdx) => {
+        const dots = safeColors.map(c =>
+          `<div class="cdot" style="background:${c.hex};cursor:pointer" title="${esc(c.name)}"
+            onclick="applyMaterialColor('${p.id}',${part.materialIndex},'${c.hex}')"></div>`
+        ).join('');
+        colorSections += `<div class="part-label">Cor — ${esc(part.label)}</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">${dots}</div>`;
+      });
+    } else {
+      /* glbParts sem parts definidas → tratar como 1 cor global */
+      const dots = safeColors.map(c =>
+        `<div class="cdot" style="background:${c.hex};cursor:pointer" title="${esc(c.name)}"
+          onclick="changeModelColor('${p.id}','${c.hex}')"></div>`
+      ).join('');
+      colorSections = `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">${dots}</div>`;
+    }
+
+  /* ════════════════════════════════════════════════════
+     MODO B: 2+ GLBs separados
+     ════════════════════════════════════════════════════ */
   } else if (glbs.length > 1) {
     const viewers = glbs.map((url, idx) =>
       `<model-viewer
@@ -431,6 +484,37 @@ function cardHTML(p, i) {
       <div class="card-badges">${oosTag || `<span class="badge badge-3d">Kit 3D (${glbs.length} partes)</span>`}</div>
     </div>`;
 
+    for (let k = 0; k < glbs.length; k++) {
+      const dots = safeColors.map(c =>
+        `<div class="cdot" style="background:${c.hex};cursor:pointer" title="${esc(c.name)}"
+          onclick="changePartColor('${p.id}',${k},'${c.hex}')"></div>`
+      ).join('');
+      colorSections += `<div class="part-label">Cor — Parte ${k+1}</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">${dots}</div>`;
+    }
+
+  /* ════════════════════════════════════════════════════
+     MODO C: 1 GLB, 1 cor global
+     ════════════════════════════════════════════════════ */
+  } else if (glbs.length === 1) {
+    imgSection = `<div class="card-img">
+      <model-viewer id="mv-${p.id}"
+        src="${esc(glbs[0])}"
+        auto-rotate camera-controls shadow-intensity="1"
+        style="width:100%;height:100%;display:block;background:var(--mist);--poster-color:transparent">
+      </model-viewer>
+      <div class="card-badges">${oosTag || '<span class="badge badge-3d">Interativo 3D</span>'}</div>
+    </div>`;
+
+    const dots = safeColors.map(c =>
+      `<div class="cdot" style="background:${c.hex};cursor:pointer" title="${esc(c.name)}"
+        onclick="changeModelColor('${p.id}','${c.hex}')"></div>`
+    ).join('');
+    colorSections = `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">${dots}</div>`;
+
+  /* ════════════════════════════════════════════════════
+     MODO D: apenas fotos (carousel)
+     ════════════════════════════════════════════════════ */
   } else if (imgs.length > 0) {
     const dots = imgs.length > 1
       ? `<div class="card-dots">${imgs.map((_,j) => `<div class="card-dot${j===0?' on':''}" onclick="carouselTo(this,${j})"></div>`).join('')}</div>`
@@ -440,6 +524,15 @@ function cardHTML(p, i) {
       <div class="card-badges">${oosTag}${!p.oos && p.type==='chaveiro' ? '<span class="badge badge-key">Chaveiro</span>' : ''}</div>
       ${dots}
     </div>`;
+
+    const dots2 = safeColors.map(c =>
+      `<div class="cdot" style="background:${c.hex};cursor:pointer" title="${esc(c.name)}"></div>`
+    ).join('');
+    colorSections = `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">${dots2}</div>`;
+
+  /* ════════════════════════════════════════════════════
+     MODO E: sem imagem
+     ════════════════════════════════════════════════════ */
   } else {
     imgSection = `<div class="card-img">
       <div class="card-img-empty">
@@ -451,6 +544,7 @@ function cardHTML(p, i) {
       </div>
       ${p.oos ? '<div class="card-badges"><span class="badge badge-oos">Esgotado</span></div>' : ''}
     </div>`;
+    colorSections = '';
   }
 
   /* ─── Tamanho / preço ─── */
@@ -460,27 +554,6 @@ function cardHTML(p, i) {
         ${p.sizes.map((s,j) => `<option value="${j}" data-price="${s.price||0}">${esc(s.label||'Opção')} — R$ ${fmt(s.price||0)}</option>`).join('')}
        </select>`
     : `<div style="font-size:.75rem;color:var(--stone);margin-bottom:10px;letter-spacing:.02em">${esc(hasSizes ? (p.sizes[0]?.label||'Único') : 'Único')}</div>`;
-
-  /* ─── Seleção de cores ─── */
-  const safeColors = Array.isArray(DEF.colors) ? DEF.colors : [];
-  let colorSections = '';
-
-  if (glbs.length > 1) {
-    for (let k = 0; k < glbs.length; k++) {
-      const dots = safeColors.map(c =>
-        `<div class="cdot" style="background:${c.hex};cursor:pointer" title="${esc(c.name)}"
-          onclick="changePartColor('${p.id}',${k},'${c.hex}')"></div>`
-      ).join('');
-      colorSections += `<div class="part-label">Cor — Parte ${k+1}</div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">${dots}</div>`;
-    }
-  } else {
-    const dots = safeColors.map(c =>
-      `<div class="cdot" style="background:${c.hex};cursor:pointer" title="${esc(c.name)}"
-        onclick="changeModelColor('${p.id}','${c.hex}')"></div>`
-    ).join('');
-    colorSections = `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">${dots}</div>`;
-  }
 
   const defaultPrice = hasSizes ? (p.sizes[0]?.price || 0) : 0;
 
@@ -500,6 +573,7 @@ function cardHTML(p, i) {
   </div>`;
 }
 
+/* ── Pedido via WhatsApp ── */
 function makeOrder(productId, productName) {
   const sel = document.getElementById('sel' + productId);
   let valor = 0, varName = '';
@@ -522,6 +596,7 @@ function updPrice(id) {
   document.getElementById('pr' + id).innerHTML = `<small>R$</small>${fmt(p.sizes[+sel.value]?.price || 0)}`;
 }
 
+/* ── Carousel ── */
 function initCarousel(el) {
   const imgs = el.querySelectorAll('img');
   if (imgs.length < 2) return;
@@ -540,16 +615,37 @@ function carouselTo(dot, idx) {
   c.querySelectorAll('.card-dot').forEach((d, i) => d.classList.toggle('on', i === idx));
 }
 
+/* ── WhatsApp ── */
 function goWaTop() {
   const texto = encodeURIComponent('Olá! Visitei a loja Forma 3D e gostaria de informações.');
   window.open(`https://wa.me/${DEF.waNumber}?text=${texto}`, '_blank');
 }
 
-/* ─── Cor em modelo 3D único ─── */
-function _applyColor(mv, hex) {
-  const r = parseInt(hex.slice(1,3), 16) / 255;
-  const g = parseInt(hex.slice(3,5), 16) / 255;
-  const b = parseInt(hex.slice(5,7), 16) / 255;
+/* ══════════════════════════════════════════════════════════
+   FUNÇÕES DE COR EM MODELOS 3D
+══════════════════════════════════════════════════════════ */
+
+/** Aplica cor a UM material específico pelo índice */
+function applyMaterialColor(prodId, materialIndex, hex) {
+  const mv = document.getElementById('mv-' + prodId);
+  if (!mv) return;
+  const [r, g, b] = hexToRgb(hex);
+  const apply = () => {
+    const mats = mv.model && mv.model.materials;
+    if (!mats) return;
+    if (mats[materialIndex]) {
+      mats[materialIndex].pbrMetallicRoughness.setBaseColorFactor([r, g, b, 1]);
+    }
+  };
+  if (mv.model) apply();
+  else mv.addEventListener('load', apply, { once: true });
+}
+
+/** Aplica cor a TODOS os materiais do modelo (1 GLB, 1 cor) */
+function changeModelColor(prodId, hex) {
+  const mv = document.getElementById('mv-' + prodId);
+  if (!mv) return;
+  const [r, g, b] = hexToRgb(hex);
   const apply = () => {
     if (mv.model && mv.model.materials) {
       mv.model.materials.forEach(mat => {
@@ -561,14 +657,18 @@ function _applyColor(mv, hex) {
   else mv.addEventListener('load', apply, { once: true });
 }
 
-function changeModelColor(prodId, hex) {
-  const mv = document.getElementById('mv-' + prodId);
-  if (mv) _applyColor(mv, hex);
-}
-
+/** Aplica cor ao modelo de uma parte (kit de GLBs separados) */
 function changePartColor(prodId, partIdx, hex) {
   const mv = document.getElementById('mv-' + prodId + '-' + partIdx);
-  if (mv) _applyColor(mv, hex);
+  if (mv) changeModelColor(prodId + '-' + partIdx, hex);
+}
+
+function hexToRgb(hex) {
+  return [
+    parseInt(hex.slice(1,3), 16) / 255,
+    parseInt(hex.slice(3,5), 16) / 255,
+    parseInt(hex.slice(5,7), 16) / 255,
+  ];
 }
 
 /* ─── Utilitários ─── */
