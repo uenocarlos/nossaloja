@@ -521,7 +521,7 @@ const DEF = {
   waNumber: '5553999387571',
 
   colors: [
-    { id: 'c2', name: 'Branco',   hex: '#f5f0e8' },
+    { id: 'c2', name: 'Branco',   hex: '#fffff' },
     { id: 'c3', name: 'Vermelho', hex: '#c0392b' },
     { id: 'c4', name: 'Azul',     hex: '#2980b9' },
     { id: 'c6', name: 'Amarelo',  hex: '#f1c40f' },
@@ -537,25 +537,33 @@ const DEF = {
       desc: 'Corpo e letra com cores independentes — 1 único GLB.',
       imgs: [],
       glbParts: {
-        src: './assets/coracao_letra.glb',
+        src: './assets/coracaoletra.glb',
         parts: [
-          { label: 'Corpo',  materialIndex: 0 },
+          { label: 'Coração',  materialIndex: 0 },
           { label: 'Letra',  materialIndex: 1 },
         ]
       },
       sizes: [ { label: 'Único', price: 18.00 } ],
       oos: false
     },
+    
     {
       id: 'prod_chaveiro_01',
       name: 'Chaveiro coração pixel art',
       type: 'chaveiro',
       desc: 'Objeto impresso em duas partes encaixáveis.',
       imgs: [],
-      glb:  [ './assets/coracaopixelarteparteum.glb', './assets/coracaopixelartepartedois.glb' ],
+      glbParts: {
+        src: './assets/coracaoletra.glb',
+        parts: [
+          { label: 'Coração 1',  materialIndex: 0 },
+          { label: 'Coração 2',  materialIndex: 1 },
+        ]
+      },
       sizes: [ { label: 'Único', price: 16.00 } ],
       oos: false
     },
+    
     {
       id: 'prod_chaveiro_02',
       name: 'Chaveiro coração pixel art inteiro',
@@ -566,17 +574,8 @@ const DEF = {
       sizes: [ { label: 'Único', price: 16.00 } ],
       oos: false
     },
-    {
-      id: 'prod_chaveiro_03',
-      name: 'Chaveiro coração',
-      type: 'chaveiro',
-      desc: 'Adicione as iniciais no chaveiro',
-      imgs: [],
-      glb:  [ './assets/coracao.glb' ],
-      sizes: [ { label: 'Único', price: 16.00 } ],
-      oos: false
-    },
-    {
+
+    /*{
       id: 'prod_chaveiro_04',
       name: 'Chaveiro coração pixel art',
       type: 'chaveiro',
@@ -585,7 +584,7 @@ const DEF = {
       glb:  [ './assets/coracaopixelart.glb' ],
       sizes: [ { label: 'Único', price: 16.00 } ],
       oos: false
-    },
+    },*/
   ]
 };
 
